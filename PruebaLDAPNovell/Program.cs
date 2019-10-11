@@ -1,47 +1,4 @@
-﻿/******************************************************************************
-* The MIT License
-* Copyright (c) 2006 Novell Inc.  www.novell.com
-* 
-* Permission is hereby granted, free of charge, to any person obtaining  a copy
-* of this software and associated documentation files (the Software), to deal
-* in the Software without restriction, including  without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-* copies of the Software, and to  permit persons to whom the Software is 
-* furnished to do so, subject to the following conditions:
-* 
-* The above copyright notice and this permission notice shall be included in 
-* all copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*******************************************************************************/
-//
-// Samples.SetPassword.cs
-//
-// Author:
-//   Palaniappan N (NPalaniappan@novell.com)
-//
-// (C) 2006 Novell, Inc (http://www.novell.com)
-//
-
-/*
-*   The SetPassword.cs sample shows how to set the password
-*   of an entry by setting the userPassword attribute
-*   of the entry.
-*
-*   In Novell eDirectory, only an admin can set a password
-*   without supplying the old password.  Consequently this
-*   method works on any Novell Ldap server, but only when the
-*   caller has admin privileges. 
-*/
-
-
-using Novell.Directory.Ldap;
+﻿using Novell.Directory.Ldap;
 
 using System;
 
@@ -49,7 +6,9 @@ public class SetPassword
 {
     public static void Main(String[] args)
     {
-        if (args.Length != 6)
+
+
+        if (args.Length < 6)
         {
             Console.Error.WriteLine("Usage:   mono SetPassword <host name> "
                 + "<login dn> <password>\n"
@@ -67,18 +26,60 @@ public class SetPassword
              * CLAVE 172.16.10.82 cn=ldap_portal,ou=DDESARROL,ou=GSISTEMAS,ou=ADM,o=garrahan G4rr4h4n19 ldaptester1 12ClaveAB
              * */
             case "CLAVE":
-                CambiarClave(args[1], args[2], args[3], args[4], args[0]);
+                CambiarClave(args[1], args[2], args[3], args[4], args[5]);
                 break;
             /*
              * Ejemplo
              * ALTA 172.16.10.82 cn=ldap_portal,ou=DDESARROL,ou=GSISTEMAS,ou=ADM,o=garrahan G4rr4h4n19 ldaptester3 12ClaveAB
              * */
             case "ALTA":
-                Alta(args[1], args[2], args[3], args[4], args[0]);
+                Alta(args[1], args[2], args[3], args[4], args[5], new[]{
+                    ("registeredAddress", "sebastianoscarlopez@gmail.com"), // ¿Ponemos el correo personal u omitimos este atributo?
+
+                    ("uid", $"{args[4]}"), // usuario
+                    ("cn", $"{args[4]}"), // usuario
+                    ("userPassword", $"{args[5]}"), // Clave
+                    ("accessCardNumber", "11111111"), // DNI, nsecag
+                    ("employeeNumber", "1111"), // Legajo, nuagag
+
+                    ("employeeType", "Planta"),// agentes_activos.dclasific ?? 'Planta'
+                    ("givenName", "Prueba"), // GivenName. :prenag. Ñ por N y palabras en capital
+                    ("fullName", "Prueba Con ÑñÁÉÍÓÚÜáéíóúü"), // Fullname. :nusuag + ' ' + :prenag. Ñ por N y palabras en capital
+                    ("sn", "Prueba"), // Surname, :nusuag. Ñ por N y palabras en capital
+
+                    ("employeeStatus", "Activo"), // Fijo
+                    ("messageServer", "cn=hpg-oes01,ou=Servers,o=GARRAHAN"), // Fijo
+                    ("title", "Portal-Web"), // Fijo
+                    ("securityEquals", "cn=Everyone,o=GARRAHAN"), // Fijo
+                    ("securityEquals", "cn=INTERNET-General,o=GARRAHAN"), // Fijo
+                    ("Profile", "cn=Usuario ZenfD - Winx Client-Server,o=GARRAHAN"), // Fijo
+                    ("loginGraceRemaining", "0"), // Fijo
+                    ("loginGraceLimit", "6"), // Fijo
+                    ("passwordAllowChange", "TRUE"), // Fijo
+                    ("passwordExpirationTime", "19920102000000Z"), // Fijo
+                    ("passwordExpirationInterval", "7776000"), // Fijo
+                    ("passwordMinimumLength", "5"), // Fijo
+                    ("passwordRequired", "TRUE"), // Fijo
+                    ("passwordUniqueRequired", "TRUE"), // Fijo
+                    ("objectClass", "inetOrgPerson"), // Fijo
+                    ("objectClass", "organizationalPerson"), // Fijo
+                    ("objectClass", "Person"), // Fijo
+                    ("objectClass", "ndsLoginProperties"), // Fijo
+                    ("objectClass", "Top"), // Fijo
+                    ("groupMembership", "cn=Everyone,o=GARRAHAN"), // Fijo
+                    ("groupMembership", "cn=INTERNET-General,o=GARRAHAN"), // Fijo
+                });
+                /*
+                attributeSet.Add(new LdapAttribute("cn", new string[] { $"{usuario} Prueba", $"Prueba {usuario}" }));
+                attributeSet.Add(new LdapAttribute("givenname", "Prueba"));
+                attributeSet.Add(new LdapAttribute("sn", $"SN{usuario}"));
+                attributeSet.Add(new LdapAttribute("mail", $"{usuario}@correo.com"));
+
+    */
                 break;
         }
     }
-    private static void Alta(string ldapHost, string conexionDN, string conexionClave, string usuario, string clave)
+    private static void Alta(string ldapHost, string conexionDN, string conexionClave, string usuario, string clave, (string nombre, string valor)[] atributos)
     {
         var groupdn = $"ou=UsuariosLDAP,o=garrahan";
         var userdn = $"cn={usuario},ou=UsuariosLDAP,o=garrahan";
@@ -97,62 +98,15 @@ public class SetPassword
             //Creates the List attributes of the entry and add them to attribute set 
             LdapAttributeSet attributeSet = new LdapAttributeSet();
             attributeSet.Add(new LdapAttribute("objectclass", "inetOrgPerson"));
-            attributeSet.Add(new LdapAttribute("cn", new string[] { $"{usuario} Prueba", $"Prueba {usuario}" }));
-            attributeSet.Add(new LdapAttribute("givenname", "Prueba"));
-            attributeSet.Add(new LdapAttribute("sn", $"SN{usuario}"));
-            attributeSet.Add(new LdapAttribute("mail", $"{usuario}@correo.com"));
-
+            foreach(var atr in atributos)
+            {
+                attributeSet.Add(new LdapAttribute(atr.nombre, atr.valor));
+            }
             // DN of the entry to be added
-            string dn = userdn;
-            LdapEntry newEntry = new LdapEntry(dn, attributeSet);
+            LdapEntry newEntry = new LdapEntry(userdn, attributeSet);
 
             //Add the entry to the directory
             lc.Add(newEntry);
-
-            /*
-            // modifications for group and user
-            LdapModification[] modGroup = new LdapModification[2];
-            LdapModification[] modUser = new LdapModification[2];
-
-            // Add modifications to modUser
-            LdapAttribute membership = new LdapAttribute("groupMembership", groupdn);
-            modUser[0] = new LdapModification(LdapModification.ADD, membership);
-            LdapAttribute security = new LdapAttribute("securityEquals", groupdn);
-            modUser[1] = new LdapModification(LdapModification.ADD, security);
-
-            // Add modifications to modGroup
-            LdapAttribute member = new LdapAttribute("uniqueMember", userdn);
-            modGroup[0] = new LdapModification(LdapModification.ADD, member);
-            LdapAttribute equivalent = new LdapAttribute("equivalentToMe", userdn);
-            modGroup[1] = new LdapModification(LdapModification.ADD, equivalent);
-
-            try
-            {
-                // Modify the user's attributes
-                lc.Modify(userdn, modUser);
-                Console.Out.WriteLine("Modified the user's attribute.");
-            }
-            catch (LdapException e)
-            {
-                Console.Out.WriteLine("Failed to modify user's attributes: " + e.LdapErrorMessage);
-            }
-
-            try
-            {
-                // Modify the group's attributes
-                lc.Modify(groupdn, modGroup);
-                Console.Out.WriteLine("Modified the group's attribute.");
-            }
-            catch (LdapException e)
-            {
-                Console.Out.WriteLine("Failed to modify group's attributes: " + e.LdapErrorMessage);
-                doCleanup(lc, userdn, groupdn);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error:" + e.Message);
-            }
-        */
         }
         catch (Exception e)
         {
